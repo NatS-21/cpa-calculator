@@ -34,4 +34,32 @@ export const calculateRecommended = (dailyAvg, leadTime, safetyDays) => {
   }
   const recommended = Math.round(dailyAvg * (leadTime + safetyDays));
   return recommended;
+};
+
+// Функция для расчета экспоненциального сглаживания (ES)
+// historicalData: массив чисел, представляющих исторические продажи/потребность
+// alpha: коэффициент сглаживания (0 < alpha <= 1)
+export const calculateExponentialSmoothing = (historicalData, alpha) => {
+  if (!historicalData || historicalData.length === 0 || alpha <= 0 || alpha > 1) {
+    return [];
+  }
+
+  const esForecasts = [];
+  // Инициализация S_0. Часто используется S_0 = demand_0
+  let St_minus_1 = historicalData[0];
+
+  // Прогноз для первого периода (делается в конце периода 0, используя данные периода 0)
+  // В цикле ниже S_t будет рассчитан в конце периода t, используя demand_t и S_{t-1}
+  // Таким образом, esForecasts[t] будет прогнозом для периода t+1.
+  // Для согласованности с MA, где MA[i] - прогноз на i+1, добавим первый элемент.
+   esForecasts.push(St_minus_1); // S_1 прогноз для периода 1 (используя S_0 = demand_0)
+
+  for (let t = 1; t < historicalData.length; t++) {
+    const demand_t = historicalData[t];
+    const St = alpha * demand_t + (1 - alpha) * St_minus_1;
+    esForecasts.push(St);
+    St_minus_1 = St; // S_t становится S_{t-1} для следующей итерации
+  }
+
+  return esForecasts;
 }; 
